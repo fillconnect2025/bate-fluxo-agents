@@ -1,0 +1,50 @@
+# Python
+__pycache__/
+*.py[cod]
+*.so
+*.egg
+*.egg-info/
+dist/
+build/
+
+# Virtual Environment
+.venv/
+
+
+# VS Code
+.vscode/
+
+# Pytest
+.pytest_cache/
+.cache/
+
+# Jupyter
+.ipynb_checkpoints
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+
+# Environment
+.env
+
+# MyPy
+.mypy_cache/
+
+# Pydantic
+pydantic_settings.*
+
+# CrewAI
+crewai_output/
+
+# PDFs / Test artifacts
+*.pdf
+*.ofx
+*.csv
+*.xlsx
+
+# Ignore test reports or data outputs
+/reports/
