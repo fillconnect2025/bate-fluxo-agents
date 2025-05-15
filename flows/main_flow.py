@@ -1,3 +1,4 @@
+import json
 from crewai import Crew
 
 # Agentes
@@ -22,11 +23,15 @@ def run_flow(file_path):
     # Criação das tarefas com seus agentes
     task_upload = upload_task(upload_agent)
     task_parser = parser_task(parser_agent, file_path)
-    task_normalizer = normalizer_task(normalizer_agent, "{{parser_output}}")
+    task_normalizer = normalizer_task(normalizer_agent, "{{parser_output.transactions}}}")
     task_reconciliation = reconciliation_task(reconciliation_agent, "{{normalizer_output}}")
     task_divergence = divergence_task(divergence_agent, "{{reconciliation_output}}")
     task_recommendation = recommendation_task(recommendation_agent, "{{divergence_output}}")
-    task_coordination = coordinator_task(coordinator_agent)
+    task_coordination = coordinator_task(
+    coordinator_agent,
+    "{{divergence_output}}",
+    "{{recommendation_output}}"
+)
 
     crew = Crew(
         agents=[
@@ -51,4 +56,20 @@ def run_flow(file_path):
     )
 
     result = crew.kickoff()
-    return result
+
+        # Extrair o texto da saída do agente coordenador (ajuste conforme seu caso)
+        # Por exemplo, se final_output for string JSON:
+    output_text = getattr(result, "final_output", None)
+    if output_text is None:
+            # Se não existir, tente extrair do último step:
+            output_text = str(result)
+
+    try:
+            structured_output = json.loads(output_text)
+    except json.JSONDecodeError:
+            structured_output = {
+                "error": "Falha ao interpretar a saída como JSON",
+                "raw_output": output_text
+            }
+
+    return structured_output

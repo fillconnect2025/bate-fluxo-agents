@@ -1,10 +1,9 @@
-from .base_agent import create_agent
+from agents.base_agent import create_agent
 
 
-divergence_detection_agent = create_agent(
-    name="DivergenceDetectionAgent",
-    role="Responsável por identificar divergências entre os dados reconciliados.",
+divergence_agent = create_agent(
+    role="DivergenceDetectionAgent",
     goal="Detectar diferenças, erros ou discrepâncias nos dados e sugerir ações corretivas.",
-    backstory="Um agente inteligente que analisa divergências financeiras de forma detalhada, utilizando LLM.",
-    tools=[]  # Assuming DetectDivergencesTool is defined in tools/detect_divergences.py
+    backstory="Um agente inteligente que analisa divergências financeiras de forma detalhada, utilizando lógica e linguagem natural.",
+    tools=[]
 )

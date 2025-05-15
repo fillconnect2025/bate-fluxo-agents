@@ -13,6 +13,7 @@ def create_agent(
     role: str,
     goal: str,
     backstory: str,
+    prompt=None,
     tools: Optional[List[BaseTool]] = None,
     allow_delegation: bool = False
 ) -> Agent:
@@ -25,6 +26,7 @@ def create_agent(
         backstory=backstory,
         tools=tools or [],
         allow_delegation=allow_delegation,
+        prompt=prompt,  # Adicione isso se quiser permitir prompts diretos
         llm=ChatOpenAI(
             model="gpt-4.1-nano",
             temperature=0.3,

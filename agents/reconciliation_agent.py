@@ -1,10 +1,9 @@
-from .base_agent import create_agent
-
+from agents.base_agent import create_agent
+from tools.reconciliationtool import ReconciliationTool
 
 reconciliation_agent = create_agent(
-    name="ReconciliationAgent",
-    role="Responsável por fazer a conciliação dos dados extraídos e reconciliá-los com os registros financeiros.",
+    role="ReconciliationAgent",
     goal="Identificar e reconciliar transações financeiras para garantir consistência e precisão nos registros.",
     backstory="Um agente focado em comparar e reconciliar dados financeiros com precisão.",
-   
+    tools=[ReconciliationTool()],
 )
