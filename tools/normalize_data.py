@@ -1,22 +1,24 @@
 from crewai.tools import BaseTool
 import pandas as pd
-import numpy as np
 
 class NormalizeDataTool(BaseTool):
     name: str = "Normalize Data Tool"
     description: str = "Normaliza datas, valores e descrições dos dados extraídos."
 
     def _run(self, raw_data: list):
-        import pandas as pd
-        from datetime import datetime
-
-        # Converte a lista de transações para DataFrame
         df = pd.DataFrame(raw_data)
 
-        # Normaliza campos comuns
+        # Normaliza data
         if 'data' in df.columns:
             df['data'] = pd.to_datetime(df['data'], errors='coerce', dayfirst=True)
-            df['data'] = df['data'].dt.strftime('%Y-%m-%d')  # formato ISO
+            df['data'] = df['data'].dt.strftime('%Y-%m-%d')
+
+        # Lida com valor bruto ou líquido se "valor" não estiver presente
+        if 'valor' not in df.columns:
+            if 'valor_liquido' in df.columns:
+                df['valor'] = df['valor_liquido']
+            elif 'valor_bruto' in df.columns:
+                df['valor'] = df['valor_bruto']
 
         if 'valor' in df.columns:
             df['valor'] = (
@@ -33,4 +35,4 @@ class NormalizeDataTool(BaseTool):
         if 'tipo' in df.columns:
             df['tipo'] = df['tipo'].astype(str).str.lower().str.strip()
 
-        return df.to_dict(orient="records")  # retorna como lista de dicionários
+        return df.to_dict(orient="records")
