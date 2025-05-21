@@ -1,6 +1,5 @@
 from crewai import Task
 
-
 def parser_task(agent, file_path):
     return Task(
         description=(
@@ -20,7 +19,7 @@ def parser_task(agent, file_path):
             "]\n\n"
             "⚠️ Não invente valores. Use apenas as transações reais contidas no texto recebido."
         ),
-        expected_output="parser_output",
+        expected_output="Uma lista JSON com todas as transações financeiras reais encontradas no extrato, incluindo data, descrição, valor bruto, valor líquido e tipo.",
         agent=agent,
-        inputs={"file_path": file_path}
+        inputs={"file_path": file_path},  # Recebe o caminho do arquivo
     )

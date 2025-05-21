@@ -8,6 +8,8 @@ class NormalizeDataTool(BaseTool):
     def _run(self, raw_data: list):
         df = pd.DataFrame(raw_data)
 
+        #TODO : PARAMOS NA NORMALIZAÇAO DOS AGNETES 
+
         # Normaliza data
         if 'data' in df.columns:
             df['data'] = pd.to_datetime(df['data'], errors='coerce', dayfirst=True)
