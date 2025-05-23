@@ -1,40 +1,63 @@
+# tools/normalize_tool.py
 from crewai.tools import BaseTool
-import pandas as pd
+import re
+from datetime import datetime
 
 class NormalizeDataTool(BaseTool):
-    name: str = "Normalize Data Tool"
-    description: str = "Normaliza datas, valores e descrições dos dados extraídos."
+    name: str = "Normalize Transactions Tool"
+    description: str = "Padroniza transações financeiras (data, descrição, valores, tipo) para análise consistente."
 
-    def _run(self, raw_data: list):
-        df = pd.DataFrame(raw_data)
+    def _run(self, transactions: list):
+        """Normaliza uma lista de transações."""
+        normalized = []
 
-        #TODO : PARAMOS NA NORMALIZAÇAO DOS AGNETES 
+        for tx in transactions:
+            try:
+                # 1. Normaliza data (suporta DD/MM/YYYY ou outras variações comuns)
+                data_raw = tx.get("data", "")
+                try:
+                    dt = datetime.strptime(data_raw, "%d/%m/%Y")
+                    tx["data"] = dt.strftime("%Y-%m-%d")
+                except ValueError:
+                    tx["data"] = data_raw  # Mantém original se falhar
 
-        # Normaliza data
-        if 'data' in df.columns:
-            df['data'] = pd.to_datetime(df['data'], errors='coerce', dayfirst=True)
-            df['data'] = df['data'].dt.strftime('%Y-%m-%d')
+                # 2. Normaliza descrição
+                descricao = tx.get("descricao", "")
+                tx["descricao"] = " ".join(descricao.strip().upper().split())
 
-        # Lida com valor bruto ou líquido se "valor" não estiver presente
-        if 'valor' not in df.columns:
-            if 'valor_liquido' in df.columns:
-                df['valor'] = df['valor_liquido']
-            elif 'valor_bruto' in df.columns:
-                df['valor'] = df['valor_bruto']
+                # 3. Converte valores para float
+                for key in ["valor_bruto", "valor_liquido", "taxas", "comissao"]:
+                    valor = tx.get(key)
+                    if isinstance(valor, str):
+                        # Remove qualquer caractere que não seja dígito ou separador decimal
+                        valor = re.sub(r"[^\d,.-]", "", valor)
+                        valor = valor.replace(".", "").replace(",", ".")
+                        try:
+                            tx[key] = float(valor)
+                        except ValueError:
+                            tx[key] = 0.0
+                    elif isinstance(valor, (int, float)):
+                        tx[key] = float(valor)
+                    else:
+                        tx[key] = 0.0
 
-        if 'valor' in df.columns:
-            df['valor'] = (
-                df['valor'].astype(str)
-                .str.replace('R$', '', regex=False)
-                .str.replace('.', '', regex=False)
-                .str.replace(',', '.', regex=False)
-                .astype(float)
-            )
+                # 4. Padroniza tipo de transação
+                tipo = tx.get("tipo", "").strip().lower()
+                if "crédito" in tipo:
+                    tx["tipo"] = "CRÉDITO"
+                elif "débito" in tipo:
+                    tx["tipo"] = "DÉBITO"
+                elif "pagamento" in tipo:
+                    tx["tipo"] = "PAGAMENTO"
+                elif "recebimento" in tipo:
+                    tx["tipo"] = "RECEBIMENTO"
+                else:
+                    tx["tipo"] = "OUTROS"
 
-        if 'descricao' in df.columns:
-            df['descricao'] = df['descricao'].astype(str).str.lower().str.strip()
+                normalized.append(tx)
 
-        if 'tipo' in df.columns:
-            df['tipo'] = df['tipo'].astype(str).str.lower().str.strip()
+            except Exception as e:
+                print(f"⚠️ Erro ao normalizar transação: {e}")
+                continue
 
-        return df.to_dict(orient="records")
+        return {"transacoes": normalized}
