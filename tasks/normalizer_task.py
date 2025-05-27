@@ -1,45 +1,102 @@
 from crewai import Task
 
-def normalizer_task(agent, transactions):
-    description = (
-        "Você receberá uma lista de transações financeiras no formato JSON contendo dados brutos.\n"
-        "Sua tarefa é normalizar esses dados para garantir consistência e padronização antes da análise.\n\n"
-        "Siga rigorosamente os seguintes passos:\n"
-        "1. Converta todas as datas para o formato ISO (YYYY-MM-DD).\n"
-        "2. Padronize as descrições: remova espaços extras e transforme todo o texto para MAIÚSCULAS.\n"
-        "3. Converta valores monetários para float, eliminando quaisquer símbolos como 'R$', pontos e vírgulas.\n"
-        "4. Padronize os tipos de transação para um dos seguintes: [CRÉDITO, DÉBITO, PAGAMENTO, RECEBIMENTO].\n"
-        "5. Certifique-se de incluir, se disponíveis, os campos de taxas e comissões como float.\n"
-        "6. Retorne a lista completa de transações normalizada no formato JSON conforme o esquema indicado."
-    )
+def normalizer_task(agent, extrato, relatorio):
+    description = """
+Você receberá duas listas de transações financeiras extraídas de arquivos:
 
-    expected_output = (
-        "Uma lista JSON de transações financeiras normalizadas contendo:\n"
-        "- 'data': string no formato ISO (YYYY-MM-DD)\n"
-        "- 'descricao': string padronizada em MAIÚSCULAS e sem espaços extras\n"
-        - "'valor_bruto': float representando o valor bruto da transação\n"
-        - "'valor_liquido': float representando o valor líquido\n"
-        - "'tipo': string padronizada como CRÉDITO, DÉBITO, PAGAMENTO ou RECEBIMENTO\n"
-        - "'taxas': float, se disponível\n"
-        - "'comissao': float, se disponível"
-    )
+1. Extrato Bancário: lista de transações contendo os campos:
+- data
+- descricao
+- valor_bruto
+- valor_liquido
+- tipo
+
+2. Relatório Adquirente: lista de transações contendo os campos:
+- data_venda
+- produto
+- parcelas
+- bandeira
+- canal
+- valor_bruto
+- valor_taxa
+- valor_liquido
+- valor_cancelado
+- status
+
+Sua tarefa é normalizar os dados para garantir consistência e padronização antes da reconciliação.
+
+Regras de normalização (aplicáveis às duas listas):
+
+1. Converta todas as datas para o formato ISO (YYYY-MM-DD).
+2. Padronize os textos: remova espaços extras e transforme em MAIÚSCULAS.
+3. Converta valores monetários para float, eliminando quaisquer símbolos como 'R$', pontos e vírgulas.
+4. Para o campo 'tipo' no extrato, padronize para: [CRÉDITO, DÉBITO, PAGAMENTO, RECEBIMENTO].
+5. Para o relatório adquirente, padronize o 'status' e demais campos textuais em MAIÚSCULAS.
+
+⚠️ Não altere ou remova campos além do especificado.
+⚠️ Retorne duas listas separadas, já normalizadas.
+"""
+
+    expected_output = """
+Um JSON com duas listas normalizadas:
+
+{
+  "extrato": [
+    {
+      "data": "YYYY-MM-DD",
+      "descricao": "MAIÚSCULAS E SEM ESPAÇOS EXTRAS",
+      "valor_bruto": float,
+      "valor_liquido": float,
+      "tipo": "CRÉDITO | DÉBITO | PAGAMENTO | RECEBIMENTO"
+    }
+  ],
+  "relatorio": [
+    {
+      "data_venda": "YYYY-MM-DD",
+      "produto": "MAIÚSCULAS E SEM ESPAÇOS EXTRAS",
+      "parcelas": int,
+      "bandeira": "MAIÚSCULAS",
+      "canal": "MAIÚSCULAS",
+      "valor_bruto": float,
+      "valor_taxa": float,
+      "valor_liquido": float,
+      "valor_cancelado": float,
+      "status": "MAIÚSCULAS"
+    }
+  ]
+}
+"""
+
+    output_json_schema = {
+        "extrato": [
+            {
+                "data": "string (ISO 8601: YYYY-MM-DD)",
+                "descricao": "string em MAIÚSCULAS e sem espaços extras",
+                "valor_bruto": "float",
+                "valor_liquido": "float",
+                "tipo": "string (CRÉDITO | DÉBITO | PAGAMENTO | RECEBIMENTO)"
+            }
+        ],
+        "relatorio": [
+            {
+                "data_venda": "string (ISO 8601: YYYY-MM-DD)",
+                "produto": "string em MAIÚSCULAS e sem espaços extras",
+                "parcelas": "int",
+                "bandeira": "string em MAIÚSCULAS",
+                "canal": "string em MAIÚSCULAS",
+                "valor_bruto": "float",
+                "valor_taxa": "float",
+                "valor_liquido": "float",
+                "valor_cancelado": "float",
+                "status": "string em MAIÚSCULAS"
+            }
+        ]
+    }
 
     return Task(
-        description=description,
-        expected_output=expected_output,
+        description=description.strip(),
+        expected_output=expected_output.strip(),
         agent=agent,
-        inputs={"transactions": transactions},
-        output_json_schema={
-            "transacoes": [
-                {
-                    "data": "string (ISO 8601: YYYY-MM-DD)",
-                    "descricao": "string",
-                    "valor_bruto": "float",
-                    "valor_liquido": "float",
-                    "tipo": "string (CRÉDITO | DÉBITO | PAGAMENTO | RECEBIMENTO)",
-                    "taxas": "float (opcional)",
-                    "comissao": "float (opcional)"
-                }
-            ]
-        }
+        inputs={"extrato": extrato, "relatorio": relatorio},
+        output_json_schema=output_json_schema
     )
