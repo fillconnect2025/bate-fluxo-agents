@@ -4,37 +4,46 @@ def normalizer_task(agent, extrato, relatorio):
     description = """
 Você receberá duas listas de transações financeiras extraídas de arquivos:
 
-1. Extrato Bancário: lista de transações contendo os campos:
+1. Extrato Bancário (lista com campos):
 - data
 - descricao
 - valor_bruto
 - valor_liquido
 - tipo
 
-2. Relatório Adquirente: lista de transações contendo os campos:
+2. Relatório Adquirente (lista com campos):
 - data_venda
-- produto
-- parcelas
-- bandeira
-- canal
 - valor_bruto
 - valor_taxa
 - valor_liquido
-- valor_cancelado
 - status
 
 Sua tarefa é normalizar os dados para garantir consistência e padronização antes da reconciliação.
 
-Regras de normalização (aplicáveis às duas listas):
+Regras de normalização:
 
-1. Converta todas as datas para o formato ISO (YYYY-MM-DD).
-2. Padronize os textos: remova espaços extras e transforme em MAIÚSCULAS.
-3. Converta valores monetários para float, eliminando quaisquer símbolos como 'R$', pontos e vírgulas.
-4. Para o campo 'tipo' no extrato, padronize para: [CRÉDITO, DÉBITO, PAGAMENTO, RECEBIMENTO].
-5. Para o relatório adquirente, padronize o 'status' e demais campos textuais em MAIÚSCULAS.
+1. **Datas**:
+   - Converta para formato ISO (YYYY-MM-DD)
+   - Ignore campos ausentes ou inválidos
 
-⚠️ Não altere ou remova campos além do especificado.
-⚠️ Retorne duas listas separadas, já normalizadas.
+2. **Valores monetários**:
+   - Remova símbolos como 'R$', pontos e vírgulas
+   - Converta para formato float (ex: "R$ 181,54" → 181.54)
+
+3. **Campos de texto**:
+   - Padronize para MAIÚSCULAS
+   - Remova espaços extras e caracteres especiais
+
+4. **Campo 'tipo' (extrato)**:
+   - Valores válidos: [CRÉDITO, DÉBITO]
+   - Ignore outros tipos
+
+5. **Campo 'status' (relatório)**:
+   - Valores válidos: [APROVADA, CANCELADA]
+   - Ignore outros status
+
+⚠️ Não altere ou remova campos além do especificado
+⚠️ Retorne duas listas separadas, já normalizadas
 """
 
     expected_output = """
@@ -44,24 +53,18 @@ Um JSON com duas listas normalizadas:
   "extrato": [
     {
       "data": "YYYY-MM-DD",
-      "descricao": "MAIÚSCULAS E SEM ESPAÇOS EXTRAS",
-      "valor_bruto": float,
+      "valor_bruto": "float",
       "valor_liquido": float,
-      "tipo": "CRÉDITO | DÉBITO | PAGAMENTO | RECEBIMENTO"
+      "tipo": "CRÉDITO | DÉBITO| PARCELADO LOJISTA | PAGAMENTO | RECEBIMENTO"
     }
   ],
   "relatorio": [
     {
       "data_venda": "YYYY-MM-DD",
-      "produto": "MAIÚSCULAS E SEM ESPAÇOS EXTRAS",
-      "parcelas": int,
-      "bandeira": "MAIÚSCULAS",
-      "canal": "MAIÚSCULAS",
       "valor_bruto": float,
       "valor_taxa": float,
       "valor_liquido": float,
-      "valor_cancelado": float,
-      "status": "MAIÚSCULAS"
+      "status": "APROVADA | CANCELADA"
     }
   ]
 }
@@ -71,24 +74,17 @@ Um JSON com duas listas normalizadas:
         "extrato": [
             {
                 "data": "string (ISO 8601: YYYY-MM-DD)",
-                "descricao": "string em MAIÚSCULAS e sem espaços extras",
-                "valor_bruto": "float",
                 "valor_liquido": "float",
-                "tipo": "string (CRÉDITO | DÉBITO | PAGAMENTO | RECEBIMENTO)"
+                "tipo": "string (CRÉDITO | DÉBITO)"
             }
         ],
         "relatorio": [
             {
                 "data_venda": "string (ISO 8601: YYYY-MM-DD)",
-                "produto": "string em MAIÚSCULAS e sem espaços extras",
-                "parcelas": "int",
-                "bandeira": "string em MAIÚSCULAS",
-                "canal": "string em MAIÚSCULAS",
                 "valor_bruto": "float",
                 "valor_taxa": "float",
                 "valor_liquido": "float",
-                "valor_cancelado": "float",
-                "status": "string em MAIÚSCULAS"
+                "status": "string (APROVADA | CANCELADA)"
             }
         ]
     }

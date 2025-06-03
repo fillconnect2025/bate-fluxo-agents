@@ -2,5 +2,5 @@
 from tools.parse_file import ParseFileTool
 
 tool = ParseFileTool()
-result = tool._run("data/Historico de Vendas - LOJA - SEMESTRAL.xlsx")
+result = tool._run("data/EXTRATO LOJA - JANEIRO.pdf")
 print(result)
